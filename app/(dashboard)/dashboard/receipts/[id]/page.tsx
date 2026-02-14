@@ -1,5 +1,3 @@
-'use client'
-
 import { ReceiptDetail } from '@/components/receipt-detail'
 
 interface ReceiptDetailPageProps {

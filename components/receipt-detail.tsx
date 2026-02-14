@@ -17,7 +17,11 @@ import {
   Edit,
   ExternalLink,
 } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTimeWithTimezone,
+} from '@/lib/utils'
 import type { Receipt as ReceiptType } from '@/types/database'
 import { toast } from '@/hooks/use-toast'
 
@@ -201,7 +205,7 @@ export function ReceiptDetail({ receiptId }: ReceiptDetailProps) {
                     {receipt.merchant_name || 'Unknown Merchant'}
                   </CardTitle>
                   <p className='text-sm text-muted-foreground mt-1'>
-                    Added on {formatDate(receipt.created_at)}
+                    Added on {formatDateTimeWithTimezone(receipt.created_at)}
                   </p>
                 </div>
                 {receipt.total_amount !== null && (
@@ -351,7 +355,7 @@ export function ReceiptDetail({ receiptId }: ReceiptDetailProps) {
               <div className='flex justify-between'>
                 <span className='text-muted-foreground'>Created</span>
                 <span className='font-medium'>
-                  {new Date(receipt.created_at).toLocaleString()}
+                  {formatDateTimeWithTimezone(receipt.created_at)}
                 </span>
               </div>
             </CardContent>

@@ -16,11 +16,55 @@ export function formatCurrency(
 }
 
 export function formatDate(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+  const d = parseDateAsUTC(date)
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+  }).format(d)
+}
+
+/**
+ * Parse a date string as UTC, handling both ISO strings with timezone
+ * and database timestamps without timezone suffix
+ */
+function parseDateAsUTC(date: string | Date): Date {
+  if (date instanceof Date) {
+    return date
+  }
+
+  // If the string already has timezone info (Z or +/-HH:MM), parse directly
+  if (date.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(date)) {
+    return new Date(date)
+  }
+
+  // Otherwise, assume it's a UTC timestamp without timezone suffix
+  // Append 'Z' to indicate UTC
+  return new Date(date + 'Z')
+}
+
+export function formatDateTime(date: string | Date): string {
+  const d = parseDateAsUTC(date)
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(d)
+}
+
+export function formatDateTimeWithTimezone(date: string | Date): string {
+  const d = parseDateAsUTC(date)
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
   }).format(d)
 }
 
