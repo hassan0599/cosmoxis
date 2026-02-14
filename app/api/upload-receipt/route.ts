@@ -1,0 +1,94 @@
+import { createClient } from '@/lib/supabase/server'
+import { extractReceiptData } from '@/lib/openrouter'
+import { NextResponse } from 'next/server'
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    // Validate file type
+    const validTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'application/pdf',
+    ]
+    if (!validTypes.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid file type. Only JPG, PNG, and PDF files are allowed.',
+        },
+        { status: 400 },
+      )
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: 'File too large. Maximum size is 10MB.' },
+        { status: 400 },
+      )
+    }
+
+    // Convert file to base64
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
+
+    // Extract receipt data using OpenRouter
+    const extractedData = await extractReceiptData(base64)
+
+    // Generate a unique ID for the receipt
+    const receiptId = crypto.randomUUID()
+
+    // Upload image to Supabase Storage
+    const fileName = `${user.id}/${receiptId}.${file.name.split('.').pop()}`
+    const { error: uploadError } = await supabase.storage
+      .from('receipt-images')
+      .upload(fileName, buffer, {
+        contentType: file.type,
+        upsert: false,
+      })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      // Continue without image URL if upload fails
+    }
+
+    // Get public URL for the uploaded image
+    const { data: urlData } = supabase.storage
+      .from('receipt-images')
+      .getPublicUrl(fileName)
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...extractedData,
+        image_url: urlData?.publicUrl || null,
+        image_base64: base64,
+        receipt_id: receiptId,
+      },
+    })
+  } catch (error) {
+    console.error('Upload receipt error:', error)
+    const message =
+      error instanceof Error ? error.message : 'Failed to process receipt'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

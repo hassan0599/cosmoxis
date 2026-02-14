@@ -1,26 +1,314 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/* CSS Custom Properties for theme colors - exposed for utility classes */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary - Dark slate (#1F2937) */
+  --color-primary: #1f2937;
+  --color-primary-hover: #111827;
+  --color-primary-light: #374151;
+  --color-primary-dark: #111827;
+  --color-primary-foreground: #ffffff;
+
+  /* Accent - Blue (#3670ED) */
+  --color-accent: #3670ed;
+  --color-accent-hover: #2563eb;
+  --color-accent-light: #60a5fa;
+  --color-accent-dark: #1d4ed8;
+  --color-accent-foreground: #ffffff;
+
+  /* Secondary - Muted gray tones */
+  --color-secondary: #6b7280;
+  --color-secondary-foreground: #4b5563;
+
+  /* Success - Blue-tinted green */
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+
+  /* Background - Clean white/gray palette */
+  --color-background: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-foreground: #1f2937;
+
+  /* Muted colors */
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+
+  /* Card - White with subtle borders */
+  --color-card: #ffffff;
+  --color-card-foreground: #1f2937;
+  --color-card-hover: #f9fafb;
+
+  /* Borders - Subtle, refined */
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-input: #e5e7eb;
+  --color-ring: #3670ed;
+
+  /* Font family - Clean sans-serif */
+  --font-sans:
+    'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Modern theme - Dark slate with blue accents */
+@theme {
+  /* Colors - Dark slate (#1F2937) primary with blue (#3670ED) accents */
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-foreground: var(--color-primary-foreground);
+
+  /* Accent - Blue (#3670ED) */
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-foreground: var(--color-accent-foreground);
+
+  /* Secondary - Muted gray tones */
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+
+  /* Success - Blue-tinted green */
+  --color-success: var(--color-success);
+  --color-success-light: var(--color-success-light);
+  --color-error: var(--color-error);
+  --color-error-light: var(--color-error-light);
+  --color-warning: var(--color-warning);
+  --color-warning-light: var(--color-warning-light);
+
+  /* Background - Clean white/gray palette */
+  --color-background: var(--color-background);
+  --color-background-secondary: var(--color-background-secondary);
+  --color-foreground: var(--color-foreground);
+
+  /* Muted colors */
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+
+  /* Card - White with subtle borders */
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-card-hover: var(--color-card-hover);
+
+  /* Borders - Subtle, refined */
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
+
+  /* Font family - Clean sans-serif */
+  --font-sans: var(--font-sans);
+
+  /* Border radius - Refined, less rounded */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+
+  /* Shadows - Subtle, refined */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 2px 4px 0 rgb(0 0 0 / 0.04), 0 2px 3px -2px rgb(0 0 0 / 0.04);
+  --shadow-lg:
+    0 4px 6px -1px rgb(0 0 0 / 0.04), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-xl:
+    0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base styles */
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+/* Focus visible styles */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Scrollbar styling - Minimal */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
+
+/* Link styles */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Utility classes */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-light);
+}
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-muted));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Smooth transitions */
+.transition-base {
+  transition: all var(--transition-normal);
+}
+
+/* Subtle hover effects */
+.hover-lift {
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Text gradient for headings */
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Clean background pattern */
+.bg-pattern {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(circle at 25% 25%, var(--color-muted) 0%, transparent 50%),
+    radial-gradient(
+      circle at 75% 75%,
+      var(--color-background-secondary) 0%,
+      transparent 50%
+    );
+  background-size: 100% 100%;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn var(--transition-slow) ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }
