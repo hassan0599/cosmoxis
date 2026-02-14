@@ -146,7 +146,7 @@ export default function LoginPage() {
         </div>
 
         <div className='relative z-10 text-sm text-white/50'>
-          © 2024 Cosmoxis. All rights reserved.
+          © 2026 Cosmoxis. All rights reserved.
         </div>
       </div>
 
