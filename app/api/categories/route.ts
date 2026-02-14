@@ -67,6 +67,17 @@ export async function POST(request: NextRequest) {
     // Check plan limits
     const { subscription, limits } = await getSubscriptionWithUsage(user.id)
 
+    // Free plan doesn't have custom categories
+    if (limits.customCategories === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'Custom categories are available on Pro and Business plans. Upgrade to create custom categories.',
+        },
+        { status: 403 },
+      )
+    }
+
     // Count existing custom categories
     const { count } = await supabase
       .from('custom_categories')

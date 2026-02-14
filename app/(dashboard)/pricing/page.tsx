@@ -14,7 +14,7 @@ const plans = [
     description: 'Perfect for trying out Cosmoxis',
     icon: Sparkles,
     features: [
-      { text: '10 receipts per month', included: true },
+      { text: 'Unlimited receipts', included: true },
       { text: '5 AI scans per month', included: true },
       { text: 'Unlimited manual entry', included: true },
       { text: '5 default categories', included: true },

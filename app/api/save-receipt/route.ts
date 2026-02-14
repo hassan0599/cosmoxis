@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { checkUsageLimit, incrementUsage } from '@/lib/stripe/subscription'
 import type { ReceiptInsert } from '@/types/database'
 
 export async function POST(request: Request) {
@@ -12,6 +13,19 @@ export async function POST(request: Request) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check receipt limit before saving
+    const limitCheck = await checkUsageLimit(user.id, 'receipt')
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: `You've reached your monthly limit of ${limitCheck.limit} receipts. Upgrade your plan to add more.`,
+          limitExceeded: true,
+          limit: limitCheck.limit,
+        },
+        { status: 403 },
+      )
     }
 
     const body = await request.json()
@@ -63,6 +77,9 @@ export async function POST(request: Request) {
         { status: 500 },
       )
     }
+
+    // Increment usage counter after successful save
+    await incrementUsage(user.id, 'receipt')
 
     return NextResponse.json({
       success: true,

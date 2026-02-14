@@ -58,7 +58,7 @@ export async function getSubscriptionWithUsage(
 export function getPlanLimits(plan: PlanType) {
   const limits = {
     free: {
-      receiptsPerMonth: 10,
+      receiptsPerMonth: Infinity,
       aiScansPerMonth: 5,
       customCategories: 0,
       pdfReportsPerMonth: 0,

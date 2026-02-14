@@ -3,7 +3,14 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Upload, Camera, Loader2, X, Image as ImageIcon } from 'lucide-react'
+import {
+  Upload,
+  Camera,
+  Loader2,
+  X,
+  Image as ImageIcon,
+  Edit3,
+} from 'lucide-react'
 
 interface ReceiptScannerProps {
   onScanComplete: (data: {
@@ -20,14 +27,17 @@ interface ReceiptScannerProps {
     imageBase64: string
   }) => void
   onCancel: () => void
+  onManualEntry?: () => void
 }
 
 export function ReceiptScanner({
   onScanComplete,
   onCancel,
+  onManualEntry,
 }: ReceiptScannerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [limitExceeded, setLimitExceeded] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -66,6 +76,15 @@ export function ReceiptScanner({
       const result = await response.json()
 
       if (!response.ok) {
+        // Handle limit exceeded error
+        if (result.limitExceeded) {
+          setError(
+            result.error || 'You have reached your monthly AI scan limit.',
+          )
+          setLimitExceeded(true)
+          setIsLoading(false)
+          return
+        }
         throw new Error(result.error || 'Failed to process receipt')
       }
 
@@ -183,6 +202,16 @@ export function ReceiptScanner({
               <Camera className='h-4 w-4' />
               Take Photo
             </Button>
+            {onManualEntry && (
+              <Button
+                variant='outline'
+                type='button'
+                onClick={onManualEntry}
+                className='gap-2'>
+                <Edit3 className='h-4 w-4' />
+                Enter Manually
+              </Button>
+            )}
             <Button
               variant='ghost'
               type='button'
@@ -195,8 +224,17 @@ export function ReceiptScanner({
       )}
 
       {error && (
-        <div className='p-4 bg-error-light border border-error/20 rounded-xl'>
+        <div className='p-4 bg-error-light border border-error/20 rounded-xl space-y-3'>
           <p className='text-sm text-error font-medium'>{error}</p>
+          {limitExceeded && onManualEntry && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={onManualEntry}
+              className='w-full'>
+              Enter Receipt Manually Instead
+            </Button>
+          )}
         </div>
       )}
 

@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ReceiptScanner } from '@/components/receipt-scanner'
 import { ReceiptForm } from '@/components/receipt-form'
 import { ReceiptList } from '@/components/receipt-list'
+import { ManualReceiptEntry } from '@/components/manual-receipt-entry'
 import { StatsChart } from '@/components/stats-chart'
 import { toast } from '@/hooks/use-toast'
+import { useSubscription } from '@/hooks/use-subscription'
 import {
   Plus,
   Download,
@@ -16,11 +18,12 @@ import {
   TrendingUp,
   Loader2,
   Sparkles,
+  Crown,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import type { Receipt } from '@/types/database'
 
-type ViewState = 'list' | 'scanning' | 'reviewing'
+type ViewState = 'list' | 'scanning' | 'reviewing' | 'manual'
 
 interface ExtractedData {
   merchant_name: string | null
@@ -57,6 +60,7 @@ export default function DashboardPage() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const isInitialLoad = useRef(true)
+  const { subscription, usage, limits, checkLimit } = useSubscription()
 
   // Debounce search query - only update the actual search after user stops typing
   useEffect(() => {
@@ -152,8 +156,20 @@ export default function DashboardPage() {
         body: JSON.stringify(data),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to save receipt')
+        // Handle limit exceeded error
+        if (result.limitExceeded) {
+          toast({
+            title: 'Limit Reached',
+            description:
+              result.error || 'You have reached your monthly receipt limit.',
+            variant: 'destructive',
+          })
+          throw new Error(result.error)
+        }
+        throw new Error(result.error || 'Failed to save receipt')
       }
 
       toast({
@@ -167,11 +183,13 @@ export default function DashboardPage() {
       fetchData()
     } catch (error) {
       console.error('Save error:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save receipt. Please try again.',
-        variant: 'destructive',
-      })
+      if (!(error instanceof Error && error.message.includes('limit'))) {
+        toast({
+          title: 'Error',
+          description: 'Failed to save receipt. Please try again.',
+          variant: 'destructive',
+        })
+      }
       throw error
     }
   }
@@ -263,12 +281,44 @@ export default function DashboardPage() {
             <Download className='h-4 w-4 mr-2' />
             Export CSV
           </Button>
-          <Button onClick={() => setViewState('scanning')}>
+          <Button variant='outline' onClick={() => setViewState('manual')}>
             <Plus className='h-4 w-4 mr-2' />
-            Scan Receipt
+            Manual Entry
+          </Button>
+          <Button onClick={() => setViewState('scanning')}>
+            <Sparkles className='h-4 w-4 mr-2' />
+            Scan with AI
           </Button>
         </div>
       </div>
+
+      {/* Usage Indicator for Free Plan */}
+      {subscription?.plan === 'free' && (
+        <Card className='border-blue-200 bg-blue-50'>
+          <CardContent className='p-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-blue-100 rounded-lg'>
+                  <Crown className='w-5 h-5 text-blue-600' />
+                </div>
+                <div>
+                  <p className='font-medium text-slate-900'>Free Plan</p>
+                  <p className='text-sm text-slate-600'>
+                    {usage?.receipts_count || 0}/{limits.receiptsPerMonth}{' '}
+                    receipts • {usage?.ai_scans_count || 0}/
+                    {limits.aiScansPerMonth} AI scans this month
+                  </p>
+                </div>
+              </div>
+              <Button
+                size='sm'
+                onClick={() => (window.location.href = '/pricing')}>
+                Upgrade to Pro
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Content */}
       {viewState === 'scanning' && (
@@ -287,6 +337,7 @@ export default function DashboardPage() {
               <ReceiptScanner
                 onScanComplete={handleScanComplete}
                 onCancel={() => setViewState('list')}
+                onManualEntry={() => setViewState('manual')}
               />
             </CardContent>
           </Card>
@@ -309,6 +360,13 @@ export default function DashboardPage() {
             }}
           />
         </div>
+      )}
+
+      {viewState === 'manual' && (
+        <ManualReceiptEntry
+          onSave={handleSaveReceipt}
+          onCancel={() => setViewState('list')}
+        />
       )}
 
       {viewState === 'list' && (

@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     // Check if user has access to tags (Pro+ feature)
     const { limits } = await getSubscriptionWithUsage(user.id)
 
-    if (!limits.customCategories && limits.customCategories !== Infinity) {
-      // Free plan doesn't have tags
+    // Tags are only available for Pro+ plans (customCategories > 0 indicates Pro+)
+    if (limits.customCategories === 0) {
       return NextResponse.json(
         {
           error:
