@@ -8,18 +8,40 @@ import {
   Palette,
   Crown,
   ExternalLink,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SubscriptionCard } from '@/components/subscription-badge'
 import { CategoryManager } from '@/components/category-manager'
 import { useSubscription } from '@/hooks/use-subscription'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function SettingsPage() {
   const { subscription, openBillingPortal } = useSubscription()
   const [activeTab, setActiveTab] = useState('subscription')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
   const plan = subscription?.plan || 'free'
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+
+      // Redirect to home page after sign out
+      router.push('/')
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      setIsDeleting(false)
+    }
+  }
 
   const tabs = [
     { id: 'subscription', label: 'Subscription', icon: CreditCard },
@@ -138,6 +160,53 @@ export default function SettingsPage() {
                         : 'Unlimited'
                 }
               />
+            </div>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card className='p-6 border-red-200 bg-red-50/50'>
+            <div className='flex items-start gap-4'>
+              <div className='p-3 bg-red-100 rounded-lg'>
+                <AlertTriangle className='w-6 h-6 text-red-600' />
+              </div>
+              <div className='flex-1'>
+                <h3 className='font-semibold text-slate-900 mb-1'>
+                  Delete Account
+                </h3>
+                <p className='text-sm text-slate-600 mb-4'>
+                  Permanently delete your account and all associated data. This
+                  action cannot be undone.
+                </p>
+                {!showDeleteConfirm ? (
+                  <Button
+                    variant='outline'
+                    className='border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700'
+                    onClick={() => setShowDeleteConfirm(true)}>
+                    <Trash2 className='w-4 h-4 mr-2' />
+                    Delete Account
+                  </Button>
+                ) : (
+                  <div className='space-y-3'>
+                    <p className='text-sm font-medium text-red-600'>
+                      Are you sure? This will permanently delete all your data.
+                    </p>
+                    <div className='flex gap-2'>
+                      <Button
+                        variant='destructive'
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}>
+                        {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+                      </Button>
+                      <Button
+                        variant='outline'
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isDeleting}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
         </div>

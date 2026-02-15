@@ -342,11 +342,11 @@ export default function LoginPage() {
 
             <p className='text-center text-sm text-muted-foreground'>
               By signing in, you agree to our{' '}
-              <a href='#' className='text-primary hover:underline'>
+              <a href='/terms' className='text-primary hover:underline'>
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href='#' className='text-primary hover:underline'>
+              <a href='/privacy' className='text-primary hover:underline'>
                 Privacy Policy
               </a>
             </p>

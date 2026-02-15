@@ -191,8 +191,16 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, merchant_name, date, total_amount, currency, category, notes } =
-      body
+    const {
+      id,
+      merchant_name,
+      date,
+      total_amount,
+      currency,
+      category,
+      notes,
+      raw_extraction_json,
+    } = body
 
     if (!id) {
       return NextResponse.json(
@@ -201,16 +209,89 @@ export async function PUT(request: Request) {
       )
     }
 
+    // Protected fields that cannot be modified in raw_extraction_json
+    const PROTECTED_FIELDS = [
+      'image_size',
+      'image_base64',
+      'image_url',
+      'image_path',
+      'file_size',
+      'file_name',
+      'created_at',
+      'updated_at',
+      'user_id',
+      'id',
+      'receipt_id',
+      'manual_entry',
+    ]
+
+    // Build update object with only provided fields
+    const updateData: Record<string, unknown> = {}
+    if (merchant_name !== undefined) updateData.merchant_name = merchant_name
+    if (date !== undefined) updateData.date = date
+    if (total_amount !== undefined) updateData.total_amount = total_amount
+    if (currency !== undefined) updateData.currency = currency
+    if (category !== undefined) updateData.category = category
+    if (notes !== undefined) updateData.notes = notes
+
+    // Handle raw_extraction_json with protected field filtering
+    if (raw_extraction_json !== undefined) {
+      // Get the current receipt to preserve protected fields
+      const { data: currentReceipt, error: fetchError } = await supabase
+        .from('receipts')
+        .select('raw_extraction_json')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (fetchError) {
+        console.error('Database fetch error:', fetchError)
+        return NextResponse.json(
+          { error: 'Failed to fetch current receipt' },
+          { status: 500 },
+        )
+      }
+
+      // Filter out protected fields from the incoming data
+      const filteredData: Record<string, unknown> = {
+        ...raw_extraction_json,
+      }
+      const originalData = currentReceipt?.raw_extraction_json as Record<
+        string,
+        unknown
+      > | null
+
+      // Remove any protected fields from incoming data and restore from original
+      PROTECTED_FIELDS.forEach((field) => {
+        delete filteredData[field]
+        if (originalData && field in originalData) {
+          filteredData[field] = originalData[field]
+        }
+      })
+
+      // Also check for fields containing 'base64' or 'size'
+      Object.keys(raw_extraction_json).forEach((key) => {
+        const lowerKey = key.toLowerCase()
+        if (
+          lowerKey.includes('base64') ||
+          lowerKey.includes('size') ||
+          PROTECTED_FIELDS.some(
+            (p) => lowerKey === p.toLowerCase() || lowerKey.includes(p),
+          )
+        ) {
+          delete filteredData[key]
+          if (originalData && key in originalData) {
+            filteredData[key] = originalData[key]
+          }
+        }
+      })
+
+      updateData.raw_extraction_json = filteredData
+    }
+
     const { data: receipt, error: updateError } = await supabase
       .from('receipts')
-      .update({
-        merchant_name,
-        date,
-        total_amount,
-        currency,
-        category,
-        notes,
-      })
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()

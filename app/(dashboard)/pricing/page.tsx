@@ -49,6 +49,7 @@ const plans = [
     cta: 'Start Pro',
     popular: true,
     planKey: 'pro',
+    comingSoon: true,
   },
   {
     name: 'Business',
@@ -67,7 +68,7 @@ const plans = [
       { text: '50GB storage', included: true },
       { text: 'Phone + email support', included: true },
     ],
-    cta: 'Start Business Trial',
+    cta: 'Start Business',
     popular: false,
     planKey: 'business',
     comingSoon: true,
@@ -312,11 +313,11 @@ export default function PricingPage() {
 
           <div>
             <h3 className='font-semibold text-slate-900 mb-2'>
-              Is there a free trial for paid plans?
+              Can I cancel my subscription anytime?
             </h3>
             <p className='text-slate-600 text-sm'>
-              Yes! Both Pro and Business plans come with a 14-day free trial. No
-              credit card required to start.
+              Yes! You can cancel your subscription at any time. Your access
+              will continue until the end of your current billing period.
             </p>
           </div>
 
