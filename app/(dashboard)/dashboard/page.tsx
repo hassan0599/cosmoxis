@@ -39,6 +39,9 @@ interface ScanResult {
   extractedData: ExtractedData
   imageUrl: string | null
   imageBase64: string
+  imageSize: number
+  imageType: string
+  receiptId: string
 }
 
 interface Stats {
@@ -145,7 +148,10 @@ export default function DashboardPage() {
     currency: string
     category: string
     notes: string
-    image_url: string | null
+    image_base64: string | null
+    image_size: number
+    image_type: string
+    receipt_id: string
     raw_extraction_json: object
     confidence_score: number | null
   }) => {
@@ -160,11 +166,10 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         // Handle limit exceeded error
-        if (result.limitExceeded) {
+        if (result.limitExceeded || result.storageExceeded) {
           toast({
             title: 'Limit Reached',
-            description:
-              result.error || 'You have reached your monthly receipt limit.',
+            description: result.error || 'You have reached your monthly limit.',
             variant: 'destructive',
           })
           throw new Error(result.error)
@@ -299,14 +304,13 @@ export default function DashboardPage() {
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
               <div className='flex items-center gap-3'>
                 <div className='p-2 bg-blue-100 rounded-lg'>
-                  <Crown className='w-5 h-5 text-blue-600' />
+                  <Crown className='w-5 h-5 text-blue-700' />
                 </div>
                 <div>
                   <p className='font-medium text-slate-900'>Free Plan</p>
-                  <p className='text-sm text-slate-600'>
-                    {usage?.receipts_count || 0}/{limits.receiptsPerMonth}{' '}
-                    receipts • {usage?.ai_scans_count || 0}/
-                    {limits.aiScansPerMonth} AI scans this month
+                  <p className='text-sm text-slate-700'>
+                    {usage?.ai_scans_count || 0}/{limits.aiScansPerMonth} AI
+                    scans this month
                   </p>
                 </div>
               </div>
@@ -353,6 +357,9 @@ export default function DashboardPage() {
             extractedData={scanResult.extractedData}
             imageUrl={scanResult.imageUrl}
             imageBase64={scanResult.imageBase64}
+            imageSize={scanResult.imageSize}
+            imageType={scanResult.imageType}
+            receiptId={scanResult.receiptId}
             onSave={handleSaveReceipt}
             onDiscard={() => {
               setViewState('list')

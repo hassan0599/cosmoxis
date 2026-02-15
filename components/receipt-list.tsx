@@ -43,11 +43,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  meals: 'bg-orange-100 text-orange-700',
-  travel: 'bg-blue-100 text-blue-700',
-  office: 'bg-purple-100 text-purple-700',
-  utilities: 'bg-green-100 text-green-700',
-  other: 'bg-gray-100 text-gray-700',
+  meals: 'bg-orange-100 text-orange-800 border border-orange-200',
+  travel: 'bg-blue-100 text-blue-800 border border-blue-200',
+  office: 'bg-purple-100 text-purple-800 border border-purple-200',
+  utilities: 'bg-green-100 text-green-800 border border-green-200',
+  other: 'bg-gray-100 text-gray-800 border border-gray-200',
 }
 
 export function ReceiptList({

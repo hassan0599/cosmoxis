@@ -25,6 +25,9 @@ interface ReceiptScannerProps {
     }
     imageUrl: string | null
     imageBase64: string
+    imageSize: number
+    imageType: string
+    receiptId: string
   }) => void
   onCancel: () => void
   onManualEntry?: () => void
@@ -90,8 +93,11 @@ export function ReceiptScanner({
 
       onScanComplete({
         extractedData: result.data,
-        imageUrl: result.data.image_url,
+        imageUrl: result.data.image_url || null,
         imageBase64: result.data.image_base64,
+        imageSize: result.data.image_size,
+        imageType: result.data.image_type,
+        receiptId: result.data.receipt_id,
       })
     } catch (err) {
       console.error('Scan error:', err)

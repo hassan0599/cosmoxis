@@ -46,7 +46,7 @@ const plans = [
       { text: '5GB storage', included: true },
       { text: 'Priority email support', included: true },
     ],
-    cta: 'Start Pro Trial',
+    cta: 'Start Pro',
     popular: true,
     planKey: 'pro',
   },
@@ -70,6 +70,7 @@ const plans = [
     cta: 'Start Business Trial',
     popular: false,
     planKey: 'business',
+    comingSoon: true,
   },
   {
     name: 'Enterprise',
@@ -91,6 +92,7 @@ const plans = [
     cta: 'Contact Sales',
     popular: false,
     planKey: 'enterprise',
+    comingSoon: true,
   },
 ]
 
@@ -133,23 +135,6 @@ export default function PricingPage() {
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
-      {/* Header */}
-      <header className='border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50'>
-        <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
-          <Link href='/' className='text-2xl font-bold text-slate-900'>
-            Cosmoxis
-          </Link>
-          <nav className='flex items-center gap-6'>
-            <Link href='/login' className='text-slate-600 hover:text-slate-900'>
-              Sign In
-            </Link>
-            <Button asChild>
-              <Link href='/login'>Get Started</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
-
       {/* Hero */}
       <section className='container mx-auto px-4 py-16 text-center'>
         <h1 className='text-4xl md:text-5xl font-bold text-slate-900 mb-4'>
@@ -180,7 +165,7 @@ export default function PricingPage() {
             Yearly
             <Badge
               variant='secondary'
-              className='ml-2 bg-green-100 text-green-700'>
+              className='ml-2 bg-green-100 text-green-800 border border-green-200'>
               Save 2 months
             </Badge>
           </button>
@@ -207,8 +192,15 @@ export default function PricingPage() {
                 }`}>
                 {plan.popular && (
                   <div className='absolute -top-3 left-1/2 -translate-x-1/2'>
-                    <Badge className='bg-blue-500 text-white'>
+                    <Badge className='bg-blue-600 text-white border-blue-700'>
                       Most Popular
+                    </Badge>
+                  </div>
+                )}
+                {plan.comingSoon && (
+                  <div className='absolute -top-3 left-1/2 -translate-x-1/2'>
+                    <Badge className='bg-amber-500 text-white border-amber-600'>
+                      Coming Soon
                     </Badge>
                   </div>
                 )}
@@ -279,8 +271,9 @@ export default function PricingPage() {
                   }`}
                   variant={
                     plan.planKey === 'enterprise' ? 'outline' : 'default'
-                  }>
-                  {plan.cta}
+                  }
+                  disabled={plan.comingSoon}>
+                  {plan.comingSoon ? 'Coming Soon' : plan.cta}
                 </Button>
               </Card>
             )

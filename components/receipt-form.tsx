@@ -35,6 +35,9 @@ interface ReceiptFormProps {
   }
   imageUrl: string | null
   imageBase64: string
+  imageSize: number
+  imageType: string
+  receiptId: string
   onSave: (data: {
     merchant_name: string
     date: string
@@ -42,7 +45,10 @@ interface ReceiptFormProps {
     currency: string
     category: string
     notes: string
-    image_url: string | null
+    image_base64: string | null
+    image_size: number
+    image_type: string
+    receipt_id: string
     raw_extraction_json: object
     confidence_score: number | null
   }) => Promise<void>
@@ -61,6 +67,9 @@ export function ReceiptForm({
   extractedData,
   imageUrl,
   imageBase64,
+  imageSize,
+  imageType,
+  receiptId,
   onSave,
   onDiscard,
 }: ReceiptFormProps) {
@@ -88,7 +97,10 @@ export function ReceiptForm({
         currency,
         category,
         notes,
-        image_url: imageUrl,
+        image_base64: imageBase64,
+        image_size: imageSize,
+        image_type: imageType,
+        receipt_id: receiptId,
         raw_extraction_json: extractedData,
         confidence_score: extractedData.confidence_score,
       })

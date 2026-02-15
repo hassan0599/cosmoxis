@@ -250,14 +250,14 @@ export default function LoginPage() {
 
                   {/* Error Message */}
                   {error && (
-                    <div className='p-3 rounded-md bg-error-light/10 border border-error/20 text-sm text-error'>
+                    <div className='p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-800'>
                       {error}
                     </div>
                   )}
 
                   {/* Success Message */}
                   {successMessage && (
-                    <div className='p-3 rounded-md bg-success-light/10 border border-success/20 text-sm text-success'>
+                    <div className='p-3 rounded-md bg-green-50 border border-green-200 text-sm text-green-800'>
                       {successMessage}
                     </div>
                   )}

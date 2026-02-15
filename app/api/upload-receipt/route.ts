@@ -74,31 +74,14 @@ export async function POST(request: Request) {
     // Generate a unique ID for the receipt
     const receiptId = crypto.randomUUID()
 
-    // Upload image to Supabase Storage
-    const fileName = `${user.id}/${receiptId}.${file.name.split('.').pop()}`
-    const { error: uploadError } = await supabase.storage
-      .from('receipt-images')
-      .upload(fileName, buffer, {
-        contentType: file.type,
-        upsert: false,
-      })
-
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError)
-      // Continue without image URL if upload fails
-    }
-
-    // Get public URL for the uploaded image
-    const { data: urlData } = supabase.storage
-      .from('receipt-images')
-      .getPublicUrl(fileName)
-
+    // Return extracted data with base64 image - storage upload happens on save
     return NextResponse.json({
       success: true,
       data: {
         ...extractedData,
-        image_url: urlData?.publicUrl || null,
         image_base64: base64,
+        image_size: file.size,
+        image_type: file.type,
         receipt_id: receiptId,
       },
     })

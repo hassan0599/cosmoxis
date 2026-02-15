@@ -95,16 +95,23 @@ export async function checkUsageLimit(
   userId: string,
   action: 'receipt' | 'ai_scan' | 'pdf_report',
 ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  // Receipts are always unlimited
+  if (action === 'receipt') {
+    return {
+      allowed: true,
+      remaining: Infinity,
+      limit: Infinity,
+    }
+  }
+
   const { subscription, usage, limits } = await getSubscriptionWithUsage(userId)
 
   const currentUsage = {
-    receipt: usage?.receipts_count || 0,
     ai_scan: usage?.ai_scans_count || 0,
     pdf_report: usage?.pdf_reports_count || 0,
   }
 
   const limitMap = {
-    receipt: limits.receiptsPerMonth,
     ai_scan: limits.aiScansPerMonth,
     pdf_report: limits.pdfReportsPerMonth,
   }
@@ -117,6 +124,106 @@ export async function checkUsageLimit(
     allowed: limit === Infinity || used < limit,
     remaining,
     limit,
+  }
+}
+
+// Check if user can upload a file based on storage limits
+export async function checkStorageLimit(
+  userId: string,
+  fileSizeBytes: number,
+): Promise<{
+  allowed: boolean
+  currentUsage: number
+  limit: number
+  remaining: number
+}> {
+  const { usage, limits } = await getSubscriptionWithUsage(userId)
+
+  const currentStorage = usage?.storage_used_bytes || 0
+  const limit = limits.storageBytes
+  const remaining =
+    limit === Infinity ? Infinity : Math.max(0, limit - currentStorage)
+
+  return {
+    allowed: limit === Infinity || currentStorage + fileSizeBytes <= limit,
+    currentUsage: currentStorage,
+    limit,
+    remaining,
+  }
+}
+
+// Update storage usage after upload
+export async function updateStorageUsage(
+  userId: string,
+  fileSizeBytes: number,
+): Promise<void> {
+  const supabase = await createClient()
+
+  const now = new Date()
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  // Try to update existing record
+  const { data: existing } = await supabase
+    .from('usage_tracking')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('period_start', periodStart.toISOString().split('T')[0])
+    .single()
+
+  if (existing) {
+    // Update existing record
+    await supabase
+      .from('usage_tracking')
+      .update({
+        storage_used_bytes:
+          (existing as { storage_used_bytes: number }).storage_used_bytes +
+          fileSizeBytes,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', (existing as { id: string }).id)
+  } else {
+    // Create new record
+    await supabase.from('usage_tracking').insert({
+      user_id: userId,
+      period_start: periodStart.toISOString().split('T')[0],
+      period_end: periodEnd.toISOString().split('T')[0],
+      storage_used_bytes: fileSizeBytes,
+    })
+  }
+}
+
+// Decrease storage usage after file deletion
+export async function decreaseStorageUsage(
+  userId: string,
+  fileSizeBytes: number,
+): Promise<void> {
+  const supabase = await createClient()
+
+  const now = new Date()
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  // Get current usage record
+  const { data: existing } = await supabase
+    .from('usage_tracking')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('period_start', periodStart.toISOString().split('T')[0])
+    .single()
+
+  if (existing) {
+    // Update existing record, ensuring we don't go below 0
+    const currentStorage = (existing as { storage_used_bytes: number })
+      .storage_used_bytes
+    const newStorage = Math.max(0, currentStorage - fileSizeBytes)
+
+    await supabase
+      .from('usage_tracking')
+      .update({
+        storage_used_bytes: newStorage,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', (existing as { id: string }).id)
   }
 }
 

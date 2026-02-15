@@ -67,17 +67,17 @@ export default function SettingsPage() {
             <Card className='p-6 border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50'>
               <div className='flex items-start gap-4'>
                 <div className='p-3 bg-blue-100 rounded-lg'>
-                  <Crown className='w-6 h-6 text-blue-600' />
+                  <Crown className='w-6 h-6 text-blue-700' />
                 </div>
                 <div className='flex-1'>
                   <h3 className='font-semibold text-slate-900 mb-1'>
                     Upgrade to Pro
                   </h3>
-                  <p className='text-sm text-slate-600 mb-4'>
+                  <p className='text-sm text-slate-700 mb-4'>
                     Get unlimited receipts, AI scans, custom categories, tags,
                     and more. Starting at just $9/month.
                   </p>
-                  <Button asChild>
+                  <Button variant='accent' asChild>
                     <a href='/pricing'>View Plans</a>
                   </Button>
                 </div>
@@ -88,10 +88,7 @@ export default function SettingsPage() {
           <Card className='p-6'>
             <h3 className='font-semibold text-slate-900 mb-4'>Plan Features</h3>
             <div className='space-y-3'>
-              <FeatureRow
-                label='Receipts per month'
-                value={plan === 'free' ? '10' : 'Unlimited'}
-              />
+              <FeatureRow label='Receipts per month' value={'Unlimited'} />
               <FeatureRow
                 label='AI scans per month'
                 value={plan === 'free' ? '5' : 'Unlimited'}

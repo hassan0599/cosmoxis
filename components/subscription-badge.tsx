@@ -22,10 +22,10 @@ const planNames: Record<PlanType, string> = {
 }
 
 const planColors: Record<PlanType, string> = {
-  free: 'bg-slate-100 text-slate-700',
-  pro: 'bg-blue-100 text-blue-700',
-  business: 'bg-purple-100 text-purple-700',
-  enterprise: 'bg-amber-100 text-amber-700',
+  free: 'bg-slate-100 text-slate-800 border border-slate-200',
+  pro: 'bg-blue-100 text-blue-800 border border-blue-200',
+  business: 'bg-purple-100 text-purple-800 border border-purple-200',
+  enterprise: 'bg-amber-100 text-amber-800 border border-amber-200',
 }
 
 interface SubscriptionBadgeProps {
@@ -47,8 +47,7 @@ export function SubscriptionBadge({
     )
   }
 
-  const plan = subscription?.plan || 'free'
-
+  const plan = (subscription?.plan || 'free') as PlanType
   return (
     <Badge className={planColors[plan]}>
       {plan === 'pro' || plan === 'business' ? (
@@ -83,7 +82,7 @@ export function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
   if (error) {
     return (
       <Card className='p-6 border-red-200 bg-red-50'>
-        <div className='flex items-center gap-2 text-red-700'>
+        <div className='flex items-center gap-2 text-red-800'>
           <AlertCircle className='w-5 h-5' />
           <span>Error loading subscription: {error}</span>
         </div>
@@ -91,7 +90,7 @@ export function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
     )
   }
 
-  const plan = subscription?.plan || 'free'
+  const plan = (subscription?.plan || 'free') as PlanType
   const receiptsUsed = usage?.receipts_count || 0
   const aiScansUsed = usage?.ai_scans_count || 0
   const receiptsLimit = limits.receiptsPerMonth
@@ -162,28 +161,6 @@ export function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
       <div className='space-y-4'>
         <div>
           <div className='flex items-center justify-between text-sm mb-1'>
-            <span className='text-slate-600'>Receipts this month</span>
-            <span className='font-medium text-slate-900'>
-              {receiptsUsed}
-              {receiptsLimit !== Infinity && ` / ${receiptsLimit}`}
-            </span>
-          </div>
-          {receiptsLimit !== Infinity && (
-            <div className='h-2 bg-slate-100 rounded-full overflow-hidden'>
-              <div
-                className={`h-full rounded-full transition-all ${
-                  receiptsUsed >= receiptsLimit ? 'bg-red-500' : 'bg-blue-500'
-                }`}
-                style={{
-                  width: `${Math.min(100, (receiptsUsed / receiptsLimit) * 100)}%`,
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        <div>
-          <div className='flex items-center justify-between text-sm mb-1'>
             <span className='text-slate-600'>AI scans this month</span>
             <span className='font-medium text-slate-900'>
               {aiScansUsed}
@@ -194,7 +171,7 @@ export function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
             <div className='h-2 bg-slate-100 rounded-full overflow-hidden'>
               <div
                 className={`h-full rounded-full transition-all ${
-                  aiScansUsed >= aiScansLimit ? 'bg-red-500' : 'bg-blue-500'
+                  aiScansUsed >= aiScansLimit ? 'bg-red-600' : 'bg-blue-600'
                 }`}
                 style={{
                   width: `${Math.min(100, (aiScansUsed / aiScansLimit) * 100)}%`,
@@ -204,21 +181,6 @@ export function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
           )}
         </div>
       </div>
-
-      {/* Upgrade CTA for Free users */}
-      {plan === 'free' && (
-        <div className='mt-6 pt-6 border-t'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='font-medium text-slate-900'>Need more?</p>
-              <p className='text-sm text-slate-500'>
-                Upgrade to Pro for unlimited receipts and AI scans
-              </p>
-            </div>
-            <Button onClick={() => onUpgrade?.('pro')}>Upgrade Now</Button>
-          </div>
-        </div>
-      )}
     </Card>
   )
 }
@@ -238,13 +200,13 @@ export function UpgradePrompt({
     <Card className='p-6 border-blue-200 bg-blue-50'>
       <div className='flex items-start gap-4'>
         <div className='p-2 bg-blue-100 rounded-lg'>
-          <Crown className='w-5 h-5 text-blue-600' />
+          <Crown className='w-5 h-5 text-blue-700' />
         </div>
         <div className='flex-1'>
           <h4 className='font-semibold text-slate-900 mb-1'>
             Upgrade to {planNames[requiredPlan]}
           </h4>
-          <p className='text-sm text-slate-600 mb-4'>
+          <p className='text-sm text-slate-700 mb-4'>
             {feature} is available on the {planNames[requiredPlan]} plan.
             Upgrade to unlock this feature and more.
           </p>
@@ -273,7 +235,7 @@ export function FeatureGate({
   const { subscription, isLoading } = useSubscription()
 
   const planHierarchy: PlanType[] = ['free', 'pro', 'business', 'enterprise']
-  const currentPlan = subscription?.plan || 'free'
+  const currentPlan = (subscription?.plan || 'free') as PlanType
   const currentPlanIndex = planHierarchy.indexOf(currentPlan)
   const requiredPlanIndex = planHierarchy.indexOf(requiredPlan)
 

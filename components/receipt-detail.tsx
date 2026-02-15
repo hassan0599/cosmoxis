@@ -38,11 +38,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  meals: 'bg-orange-100 text-orange-700 border-orange-200',
-  travel: 'bg-blue-100 text-blue-700 border-blue-200',
-  office: 'bg-purple-100 text-purple-700 border-purple-200',
-  utilities: 'bg-green-100 text-green-700 border-green-200',
-  other: 'bg-gray-100 text-gray-700 border-gray-200',
+  meals: 'bg-orange-100 text-orange-800 border-orange-300',
+  travel: 'bg-blue-100 text-blue-800 border-blue-300',
+  office: 'bg-purple-100 text-purple-800 border-purple-300',
+  utilities: 'bg-green-100 text-green-800 border-green-300',
+  other: 'bg-gray-100 text-gray-800 border-gray-300',
 }
 
 export function ReceiptDetail({ receiptId }: ReceiptDetailProps) {
@@ -253,14 +253,14 @@ export function ReceiptDetail({ receiptId }: ReceiptDetailProps) {
                         Confidence
                       </p>
                       <Badge
-                        variant={
+                        className={`mt-1 ${
                           confidenceLevel === 'high'
-                            ? 'default'
+                            ? 'bg-green-100 text-green-800 border border-green-200'
                             : confidenceLevel === 'medium'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                        className='mt-1'>
+                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                              : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}
+                        variant='outline'>
                         {Math.round((receipt.confidence_score || 0) * 100)}%
                       </Badge>
                     </div>

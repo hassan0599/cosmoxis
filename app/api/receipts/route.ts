@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { decreaseStorageUsage } from '@/lib/stripe/subscription'
 
 export async function GET(request: Request) {
   try {
@@ -141,11 +142,31 @@ export async function DELETE(request: Request) {
       )
     }
 
-    // Delete image from storage if exists
+    // Delete image from storage if exists and update storage usage
     if (receipt?.image_url) {
       const urlParts = receipt.image_url.split('/')
       const fileName = `${user.id}/${urlParts[urlParts.length - 1]}`
+
+      // Get file metadata to retrieve size before deletion
+      const { data: files } = await supabase.storage
+        .from('receipt-images')
+        .list(user.id, {
+          search: urlParts[urlParts.length - 1],
+        })
+
+      const fileInfo = files?.find(
+        (f: { name: string; metadata?: { size?: number } }) =>
+          f.name === urlParts[urlParts.length - 1],
+      )
+      const fileSize = fileInfo?.metadata?.size || 0
+
+      // Delete the file
       await supabase.storage.from('receipt-images').remove([fileName])
+
+      // Decrease storage usage
+      if (fileSize > 0) {
+        await decreaseStorageUsage(user.id, fileSize)
+      }
     }
 
     return NextResponse.json({ success: true })

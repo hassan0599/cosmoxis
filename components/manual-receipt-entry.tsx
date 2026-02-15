@@ -31,7 +31,10 @@ interface ManualReceiptEntryProps {
     currency: string
     category: string
     notes: string
-    image_url: string | null
+    image_base64: string | null
+    image_size: number
+    image_type: string
+    receipt_id: string
     raw_extraction_json: object
     confidence_score: number | null
   }) => Promise<void>
@@ -79,7 +82,10 @@ export function ManualReceiptEntry({
         currency,
         category,
         notes,
-        image_url: null,
+        image_base64: null,
+        image_size: 0,
+        image_type: '',
+        receipt_id: crypto.randomUUID(),
         raw_extraction_json: { manual_entry: true },
         confidence_score: null,
       })

@@ -18,6 +18,13 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url')
+    .eq('id', user.id)
+    .single()
+
   return (
     <div className='min-h-screen bg-background'>
       {/* Header */}
@@ -38,7 +45,9 @@ export default async function DashboardLayout({
               Cosmoxis
             </span>
           </a>
-          <UserNav userEmail={user.email} />
+          <div className='flex items-center gap-4'>
+            <UserNav userEmail={user.email} fullName={profile?.full_name} />
+          </div>
         </div>
       </header>
 
