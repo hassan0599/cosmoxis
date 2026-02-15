@@ -29,7 +29,7 @@ export default async function DashboardLayout({
     <div className='min-h-screen bg-background'>
       {/* Header */}
       <header className='sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-border-light'>
-        <div className='max-w-6xl mx-auto px-6 py-4 flex items-center justify-between'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between'>
           <a href='/dashboard' className='flex items-center gap-2'>
             <div className='w-8 h-8 rounded-md bg-muted p-1 flex items-center justify-center'>
               <Image
@@ -41,7 +41,7 @@ export default async function DashboardLayout({
                 unoptimized
               />
             </div>
-            <span className='text-xl font-semibold text-foreground tracking-tight'>
+            <span className='text-lg sm:text-xl font-semibold text-foreground tracking-tight'>
               Cosmoxis
             </span>
           </a>
@@ -52,7 +52,9 @@ export default async function DashboardLayout({
       </header>
 
       {/* Main Content */}
-      <main className='max-w-6xl mx-auto px-6 py-8'>{children}</main>
+      <main className='max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
+        {children}
+      </main>
 
       {/* Toast Notifications */}
       <Toaster />

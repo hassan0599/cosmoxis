@@ -61,14 +61,14 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className='flex gap-2 mb-6 border-b'>
+      <div className='flex gap-2 mb-6 border-b overflow-x-auto'>
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'

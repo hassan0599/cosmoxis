@@ -281,16 +281,19 @@ export default function DashboardPage() {
             Manage your receipts and track spending
           </p>
         </div>
-        <div className='flex gap-3'>
-          <Button variant='outline' onClick={handleExportCsv}>
+        <div className='flex flex-wrap gap-2'>
+          <Button variant='outline' onClick={handleExportCsv} size='sm'>
             <Download className='h-4 w-4 mr-2' />
             Export CSV
           </Button>
-          <Button variant='outline' onClick={() => setViewState('manual')}>
+          <Button
+            variant='outline'
+            onClick={() => setViewState('manual')}
+            size='sm'>
             <Plus className='h-4 w-4 mr-2' />
             Manual Entry
           </Button>
-          <Button onClick={() => setViewState('scanning')}>
+          <Button onClick={() => setViewState('scanning')} size='sm'>
             <Sparkles className='h-4 w-4 mr-2' />
             Scan with AI
           </Button>
