@@ -64,6 +64,11 @@ export const SUPPORTED_CURRENCIES = {
     symbolPosition: 'before' as const,
   },
   RUB: { symbol: '₽', name: 'Russian Ruble', symbolPosition: 'after' as const },
+  PKR: {
+    symbol: '₨',
+    name: 'Pakistani Rupee',
+    symbolPosition: 'before' as const,
+  },
 } as const
 
 export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES
@@ -131,6 +136,7 @@ let exchangeRates: Record<CurrencyCode, number> = {
   NZD: 1.64,
   ZAR: 18.65,
   RUB: 92.5,
+  PKR: 278.5,
 }
 
 // Update exchange rates from API
@@ -245,6 +251,7 @@ export function detectCurrencyFromText(text: string): CurrencyCode {
   if (upperText.includes('₹')) return 'INR'
   if (upperText.includes('₩')) return 'KRW'
   if (upperText.includes('₽')) return 'RUB'
+  if (upperText.includes('₨')) return 'PKR'
   if (upperText.includes('R$')) return 'BRL'
 
   // Check for currency names
@@ -267,7 +274,11 @@ export function detectCurrencyFromText(text: string): CurrencyCode {
   if (upperText.includes('PESO')) {
     if (upperText.includes('MEXICAN') || upperText.includes('MXN')) return 'MXN'
   }
-  if (upperText.includes('RUPEE')) return 'INR'
+  if (upperText.includes('RUPEE')) {
+    if (upperText.includes('PAKISTANI') || upperText.includes('PKR'))
+      return 'PKR'
+    return 'INR'
+  }
   if (upperText.includes('WON')) return 'KRW'
   if (upperText.includes('YUAN') || upperText.includes('RENMINBI')) return 'CNY'
   if (upperText.includes('YEN')) return 'JPY'
