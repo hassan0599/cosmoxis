@@ -35,7 +35,7 @@ interface ManualReceiptEntryProps {
     image_size: number
     image_type: string
     receipt_id: string
-    raw_extraction_json: object
+    raw_extraction_json: any
     confidence_score: number | null
   }) => Promise<void>
   onCancel: () => void

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Plus,
   Pencil,
@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useSubscription } from '@/hooks/use-subscription'
+import { useCategories } from '@/hooks/use-categories'
 import type { CustomCategory, Tag as TagType } from '@/types/database'
 
 interface Category {
@@ -55,9 +56,17 @@ const PRESET_COLORS = [
 
 export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
   const { subscription, limits } = useSubscription()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [tags, setTags] = useState<TagType[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const {
+    categories,
+    tags,
+    isLoading,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    createTag,
+    deleteTag,
+  } = useCategories()
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryColor, setNewCategoryColor] = useState('#3670ED')
@@ -72,74 +81,19 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     limits.customCategories > 0 || limits.customCategories === Infinity
   const canCreateTags = plan !== 'free'
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true)
-
-      // Fetch categories
-      const categoriesRes = await fetch('/api/categories')
-      const categoriesData = await categoriesRes.json()
-
-      const allCategories: Category[] = [
-        ...categoriesData.default.map(
-          (c: { name: string; color: string; icon: string }) => ({
-            id: `default-${c.name.toLowerCase()}`,
-            name: c.name,
-            color: c.color,
-            icon: c.icon,
-            isDefault: true,
-          }),
-        ),
-        ...(categoriesData.custom || []).map((c: CustomCategory) => ({
-          ...c,
-          isDefault: false,
-        })),
-      ]
-
-      setCategories(allCategories)
-
-      // Fetch tags
-      const tagsRes = await fetch('/api/tags')
-      const tagsData = await tagsRes.json()
-      setTags(Array.isArray(tagsData) ? tagsData : [])
-    } catch (err) {
-      console.error('Error fetching data:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return
 
     setError(null)
 
     try {
-      const res = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newCategoryName,
-          color: newCategoryColor,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to create category')
-        return
+      const category = await createCategory(newCategoryName, newCategoryColor)
+      if (category) {
+        setNewCategoryName('')
+        setNewCategoryColor('#3670ED')
+        setShowNewCategory(false)
+        onCategoryChange?.()
       }
-
-      setCategories((prev) => [...prev, { ...data, isDefault: false }])
-      setNewCategoryName('')
-      setNewCategoryColor('#3670ED')
-      setShowNewCategory(false)
-      onCategoryChange?.()
     } catch (err) {
       setError('Failed to create category')
     }
@@ -153,24 +107,11 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     if (id.startsWith('default-')) return // Can't edit default categories
 
     try {
-      const res = await fetch(`/api/categories/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to update category')
-        return
+      const category = await updateCategory(id, name, color)
+      if (category) {
+        setEditingId(null)
+        onCategoryChange?.()
       }
-
-      setCategories((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, ...data } : c)),
-      )
-      setEditingId(null)
-      onCategoryChange?.()
     } catch (err) {
       setError('Failed to update category')
     }
@@ -182,17 +123,10 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     if (!confirm('Are you sure you want to delete this category?')) return
 
     try {
-      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to delete category')
-        return
+      const success = await deleteCategory(id)
+      if (success) {
+        onCategoryChange?.()
       }
-
-      setCategories((prev) => prev.filter((c) => c.id !== id))
-      onCategoryChange?.()
     } catch (err) {
       setError('Failed to delete category')
     }
@@ -204,26 +138,12 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     setError(null)
 
     try {
-      const res = await fetch('/api/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newTagName,
-          color: newTagColor,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to create tag')
-        return
+      const tag = await createTag(newTagName, newTagColor)
+      if (tag) {
+        setNewTagName('')
+        setNewTagColor('#9CA3AF')
+        setShowNewTag(false)
       }
-
-      setTags((prev) => [...prev, data])
-      setNewTagName('')
-      setNewTagColor('#9CA3AF')
-      setShowNewTag(false)
     } catch (err) {
       setError('Failed to create tag')
     }
@@ -233,15 +153,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     if (!confirm('Are you sure you want to delete this tag?')) return
 
     try {
-      const res = await fetch(`/api/tags/${id}`, { method: 'DELETE' })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || 'Failed to delete tag')
-        return
-      }
-
-      setTags((prev) => prev.filter((t) => t.id !== id))
+      await deleteTag(id)
     } catch (err) {
       setError('Failed to delete tag')
     }
@@ -498,31 +410,21 @@ function CategoryItem({
     <Card
       className='p-3 flex items-center justify-between group'
       style={{ backgroundColor: category.color + '10' }}>
-      <div className='flex items-center gap-2'>
-        <div
-          className='w-3 h-3 rounded-full'
-          style={{ backgroundColor: category.color }}
-        />
-        <span className='font-medium text-slate-700'>{category.name}</span>
-        {category.isDefault && (
-          <Badge variant='secondary' className='text-xs'>
-            Default
-          </Badge>
+      <div>
+        <p className='font-medium text-slate-900'>{category.name}</p>
+      </div>
+      <div className='opacity-0 group-hover:opacity-100 transition-opacity flex gap-1'>
+        {!category.isDefault && (
+          <>
+            <Button variant='ghost' size='sm' onClick={onStartEdit}>
+              <Pencil className='w-3 h-3' />
+            </Button>
+            <Button variant='ghost' size='sm' onClick={onDelete}>
+              <Trash2 className='w-3 h-3' />
+            </Button>
+          </>
         )}
       </div>
-
-      {!category.isDefault && (
-        <div className='opacity-0 group-hover:opacity-100 flex gap-1'>
-          <button
-            onClick={onStartEdit}
-            className='p-1 hover:bg-black/10 rounded'>
-            <Pencil className='w-3 h-3 text-slate-500' />
-          </button>
-          <button onClick={onDelete} className='p-1 hover:bg-black/10 rounded'>
-            <Trash2 className='w-3 h-3 text-red-500' />
-          </button>
-        </div>
-      )}
     </Card>
   )
 }

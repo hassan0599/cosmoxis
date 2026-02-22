@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ReceiptScanner } from '@/components/receipt-scanner'
@@ -8,7 +8,8 @@ import { ReceiptForm } from '@/components/receipt-form'
 import { ReceiptList } from '@/components/receipt-list'
 import { ManualReceiptEntry } from '@/components/manual-receipt-entry'
 import { StatsChart } from '@/components/stats-chart'
-import { toast } from '@/hooks/use-toast'
+import { useReceipts } from '@/hooks/use-receipts'
+import { useStats } from '@/hooks/use-stats'
 import { useSubscription } from '@/hooks/use-subscription'
 import {
   Plus,
@@ -21,7 +22,7 @@ import {
   Crown,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
-import type { Receipt } from '@/types/database'
+import type { Receipt, Json } from '@/types/database'
 
 type ViewState = 'list' | 'scanning' | 'reviewing' | 'manual'
 
@@ -44,26 +45,23 @@ interface ScanResult {
   receiptId: string
 }
 
-interface Stats {
-  month: string
-  totalSpent: number
-  receiptCount: number
-  categoryBreakdown: Record<string, number>
-  availableMonths: string[]
-}
-
 export default function DashboardPage() {
   const [viewState, setViewState] = useState<ViewState>('list')
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-  const [receipts, setReceipts] = useState<Receipt[]>([])
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingReceipts, setIsLoadingReceipts] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const isInitialLoad = useRef(true)
   const { subscription, usage, limits, checkLimit } = useSubscription()
+  const {
+    receipts,
+    isLoading,
+    fetchReceipts,
+    createReceipt,
+    deleteReceipt,
+    exportCsv,
+  } = useReceipts()
+  const { stats } = useStats()
 
   // Debounce search query - only update the actual search after user stops typing
   useEffect(() => {
@@ -73,68 +71,13 @@ export default function DashboardPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [receiptsRes, statsRes] = await Promise.all([
-        fetch(
-          `/api/receipts?limit=20${debouncedSearchQuery ? `&search=${debouncedSearchQuery}` : ''}${
-            categoryFilter !== 'all' ? `&category=${categoryFilter}` : ''
-          }`,
-        ),
-        fetch('/api/stats'),
-      ])
-
-      if (receiptsRes.ok) {
-        const data = await receiptsRes.json()
-        setReceipts(data.receipts)
-      }
-
-      if (statsRes.ok) {
-        const data = await statsRes.json()
-        setStats(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch data:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load data. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-      isInitialLoad.current = false
-    }
-  }, [debouncedSearchQuery, categoryFilter])
-
-  // Fetch only receipts (for search/filter) without full page loading
-  const fetchReceipts = useCallback(async () => {
-    setIsLoadingReceipts(true)
-    try {
-      const receiptsRes = await fetch(
-        `/api/receipts?limit=20${debouncedSearchQuery ? `&search=${debouncedSearchQuery}` : ''}${
-          categoryFilter !== 'all' ? `&category=${categoryFilter}` : ''
-        }`,
-      )
-
-      if (receiptsRes.ok) {
-        const data = await receiptsRes.json()
-        setReceipts(data.receipts)
-      }
-    } catch (error) {
-      console.error('Failed to fetch receipts:', error)
-    } finally {
-      setIsLoadingReceipts(false)
-    }
-  }, [debouncedSearchQuery, categoryFilter])
-
   useEffect(() => {
-    if (isInitialLoad.current) {
-      fetchData()
-    } else {
-      fetchReceipts()
-    }
-  }, [fetchData, fetchReceipts])
+    const params: any = { limit: 20 }
+    if (debouncedSearchQuery) params.search = debouncedSearchQuery
+    if (categoryFilter !== 'all') params.category = categoryFilter
+
+    fetchReceipts(params)
+  }, [debouncedSearchQuery, categoryFilter, fetchReceipts])
 
   const handleScanComplete = (result: ScanResult) => {
     setScanResult(result)
@@ -152,110 +95,25 @@ export default function DashboardPage() {
     image_size: number
     image_type: string
     receipt_id: string
-    raw_extraction_json: object
+    raw_extraction_json: Json
     confidence_score: number | null
   }) => {
-    try {
-      const response = await fetch('/api/save-receipt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        // Handle limit exceeded error
-        if (result.limitExceeded || result.storageExceeded) {
-          toast({
-            title: 'Limit Reached',
-            description: result.error || 'You have reached your monthly limit.',
-            variant: 'destructive',
-          })
-          throw new Error(result.error)
-        }
-        throw new Error(result.error || 'Failed to save receipt')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Receipt saved successfully!',
-        variant: 'success',
-      })
-
+    const receipt = await createReceipt(data)
+    if (receipt) {
       setViewState('list')
       setScanResult(null)
-      fetchData()
-    } catch (error) {
-      console.error('Save error:', error)
-      if (!(error instanceof Error && error.message.includes('limit'))) {
-        toast({
-          title: 'Error',
-          description: 'Failed to save receipt. Please try again.',
-          variant: 'destructive',
-        })
-      }
-      throw error
     }
   }
 
   const handleDeleteReceipt = async (id: string) => {
-    try {
-      const response = await fetch(`/api/receipts?id=${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete receipt')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Receipt deleted successfully!',
-        variant: 'success',
-      })
-
-      fetchData()
-    } catch (error) {
-      console.error('Delete error:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to delete receipt. Please try again.',
-        variant: 'destructive',
-      })
+    const success = await deleteReceipt(id)
+    if (success) {
+      // Receipts will be refetched automatically
     }
   }
 
   const handleExportCsv = async () => {
-    try {
-      const response = await fetch('/api/export-csv')
-      if (!response.ok) {
-        throw new Error('Failed to export')
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `cosmoxis-receipts-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-
-      toast({
-        title: 'Success',
-        description: 'Receipts exported successfully!',
-        variant: 'success',
-      })
-    } catch (error) {
-      console.error('Export error:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to export receipts. Please try again.',
-        variant: 'destructive',
-      })
-    }
+    await exportCsv()
   }
 
   if (isLoading) {
@@ -453,7 +311,7 @@ export default function DashboardPage() {
                 onFilter={setCategoryFilter}
                 searchQuery={searchQuery}
                 categoryFilter={categoryFilter}
-                isLoading={isLoadingReceipts}
+                isLoading={isLoading}
               />
             </div>
 

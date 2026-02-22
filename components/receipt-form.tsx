@@ -22,6 +22,7 @@ import {
   Tag,
   Sparkles,
 } from 'lucide-react'
+import type { Json } from '@/types/database'
 
 interface ReceiptFormProps {
   extractedData: {
@@ -49,7 +50,7 @@ interface ReceiptFormProps {
     image_size: number
     image_type: string
     receipt_id: string
-    raw_extraction_json: object
+    raw_extraction_json: any
     confidence_score: number | null
   }) => Promise<void>
   onDiscard: () => void
