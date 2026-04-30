@@ -51,11 +51,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate file size (20MB max before compression)
-    const maxSize = 20 * 1024 * 1024
+    // Validate file size (5MB max after compression)
+    const maxSize = 5 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 20MB.' },
+        { error: 'File too large after compression. Please try a different image.' },
         { status: 400 },
       )
     }
@@ -64,6 +64,12 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
+
+    console.log('Processing image:', {
+      size: file.size,
+      type: file.type,
+      base64Length: base64.length,
+    })
 
     // Extract receipt data using OpenRouter
     const extractedData = await extractReceiptData(base64)

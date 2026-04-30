@@ -54,7 +54,7 @@ export function ReceiptScanner({
           const canvas = document.createElement('canvas')
           let width = img.width
           let height = img.height
-          const maxDimension = 2048
+          const maxDimension = 1600
 
           if (width > maxDimension || height > maxDimension) {
             if (width > height) {
@@ -80,7 +80,7 @@ export function ReceiptScanner({
               }
             },
             'image/jpeg',
-            0.85,
+            0.8,
           )
         }
         img.onerror = () => reject(new Error('Failed to load image'))
