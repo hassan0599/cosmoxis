@@ -1,0 +1,9 @@
+[functions]
+  node_bundler = "esbuild"
+  
+[[functions]]
+  path = "api/upload-receipt"
+  node_bundler = "esbuild"
+  
+[functions."api/upload-receipt"]
+  timeout = 26

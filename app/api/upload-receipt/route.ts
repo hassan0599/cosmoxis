@@ -3,6 +3,10 @@ import { extractReceiptData } from '@/lib/openrouter'
 import { checkUsageLimit, incrementUsage } from '@/lib/stripe/subscription'
 import { NextResponse } from 'next/server'
 
+export const config = {
+  maxDuration: 26,
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
@@ -71,8 +75,10 @@ export async function POST(request: Request) {
       base64Length: base64.length,
     })
 
+    console.log('Calling OpenRouter API...')
     // Extract receipt data using OpenRouter
     const extractedData = await extractReceiptData(base64)
+    console.log('OpenRouter API response received')
 
     // Increment AI scan usage counter after successful extraction
     await incrementUsage(user.id, 'ai_scan')
