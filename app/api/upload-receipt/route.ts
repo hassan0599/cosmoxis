@@ -3,9 +3,7 @@ import { extractReceiptData } from '@/lib/openrouter'
 import { checkUsageLimit, incrementUsage } from '@/lib/stripe/subscription'
 import { NextResponse } from 'next/server'
 
-export const config = {
-  maxDuration: 26,
-}
+export const maxDuration = 26
 
 export async function POST(request: Request) {
   try {
