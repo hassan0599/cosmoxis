@@ -45,6 +45,52 @@ export function ReceiptScanner({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+          const maxDimension = 2048
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height / width) * maxDimension
+              width = maxDimension
+            } else {
+              width = (width / height) * maxDimension
+              height = maxDimension
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(img, 0, 0, width, height)
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+              } else {
+                reject(new Error('Failed to compress image'))
+              }
+            },
+            'image/jpeg',
+            0.85,
+          )
+        }
+        img.onerror = () => reject(new Error('Failed to load image'))
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleFileSelect = async (file: File) => {
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg']
@@ -53,9 +99,9 @@ export function ReceiptScanner({
       return
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File too large. Maximum size is 10MB.')
+    // Validate file size (20MB max before compression)
+    if (file.size > 20 * 1024 * 1024) {
+      setError('File too large. Maximum size is 20MB.')
       return
     }
 
@@ -63,13 +109,16 @@ export function ReceiptScanner({
     setIsLoading(true)
 
     try {
+      // Compress image for better mobile compatibility
+      const compressedFile = await compressImage(file)
+
       // Create preview URL
-      const preview = URL.createObjectURL(file)
+      const preview = URL.createObjectURL(compressedFile)
       setPreviewUrl(preview)
 
       // Upload and process
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', compressedFile)
 
       const response = await fetch('/api/upload-receipt', {
         method: 'POST',
@@ -189,7 +238,7 @@ export function ReceiptScanner({
               Drag and drop your receipt here
             </p>
             <p className='text-sm text-muted-foreground mb-4'>
-              or click to browse (JPG, PNG up to 10MB)
+              or click to browse (JPG, PNG up to 20MB)
             </p>
             <Button variant='outline' type='button' size='sm'>
               <ImageIcon className='h-4 w-4 mr-2' />

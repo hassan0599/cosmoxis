@@ -33,6 +33,11 @@ export interface ExtractedReceiptData {
 export async function extractReceiptData(
   base64Image: string,
 ): Promise<ExtractedReceiptData> {
+  // Ensure base64 image has correct format
+  if (!base64Image.startsWith('data:image/')) {
+    throw new Error('Invalid image format')
+  }
+
   // Try primary model first, then fallback model on error
   const models = [MODEL, FALLBACK_MODEL]
 
