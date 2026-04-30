@@ -76,6 +76,12 @@ export function ReceiptScanner({
         body: formData,
       })
 
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server error: Invalid response format')
+      }
+
       const result = await response.json()
 
       if (!response.ok) {
